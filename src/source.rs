@@ -46,7 +46,7 @@ pub struct SourceSlice {
 /// PDB files are specified as always being a multiple of the page size, so `Source` implementations
 /// are free to e.g. map whole pages and return a sub-slice of the requested length.
 ///
-pub trait Source<'s>: fmt::Debug {
+pub trait Source<'s>: fmt::Debug + Send + Sync {
     /// Provides a contiguous view of the source file composed of the requested position(s).
     ///
     /// Note that the SourceView's as_slice() method cannot fail, so `view()` is the time to raise
@@ -55,7 +55,7 @@ pub trait Source<'s>: fmt::Debug {
 }
 
 /// An owned, droppable, read-only view of the source file which can be referenced as a byte slice.
-pub trait SourceView<'s>: fmt::Debug {
+pub trait SourceView<'s>: fmt::Debug + Send + Sync {
     /// Returns a view to the raw data.
     fn as_slice(&self) -> &[u8];
 }
@@ -77,7 +77,7 @@ impl SourceView<'_> for ReadView {
     }
 }
 
-impl<'s, T> Source<'s> for T
+impl<'s, T: Send + Sync> Source<'s> for T
 where
     T: io::Read + io::Seek + fmt::Debug + 's,
 {
